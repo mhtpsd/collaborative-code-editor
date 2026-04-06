@@ -1,8 +1,0 @@
-/home/runner/work/collaborative-code-editor/collaborative-code-editor/backend/src/test/java/com/mohitprasad/codeeditor/controller/RoomControllerTest.java
-/home/runner/work/collaborative-code-editor/collaborative-code-editor/backend/src/test/java/com/mohitprasad/codeeditor/controller/ExecutionControllerTest.java
-/home/runner/work/collaborative-code-editor/collaborative-code-editor/backend/src/test/java/com/mohitprasad/codeeditor/CodeEditorApplicationTests.java
-/home/runner/work/collaborative-code-editor/collaborative-code-editor/backend/src/test/java/com/mohitprasad/codeeditor/config/TestConfig.java
-/home/runner/work/collaborative-code-editor/collaborative-code-editor/backend/src/test/java/com/mohitprasad/codeeditor/websocket/WebSocketIntegrationTest.java
-/home/runner/work/collaborative-code-editor/collaborative-code-editor/backend/src/test/java/com/mohitprasad/codeeditor/service/RoomServiceTest.java
-/home/runner/work/collaborative-code-editor/collaborative-code-editor/backend/src/test/java/com/mohitprasad/codeeditor/service/CodeExecutionServiceTest.java
-/home/runner/work/collaborative-code-editor/collaborative-code-editor/backend/src/test/java/com/mohitprasad/codeeditor/integration/CodeEditorIntegrationTest.java

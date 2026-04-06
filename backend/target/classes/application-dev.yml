@@ -1,8 +1,0 @@
-spring:
-  jpa:
-    show-sql: true
-
-logging:
-  level:
-    com.mohitprasad.codeeditor: DEBUG
-    org.springframework.web.socket: DEBUG

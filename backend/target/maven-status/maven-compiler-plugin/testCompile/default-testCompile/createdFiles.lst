@@ -1,8 +1,0 @@
-com/mohitprasad/codeeditor/service/RoomServiceTest.class
-com/mohitprasad/codeeditor/config/TestConfig.class
-com/mohitprasad/codeeditor/controller/RoomControllerTest.class
-com/mohitprasad/codeeditor/integration/CodeEditorIntegrationTest.class
-com/mohitprasad/codeeditor/controller/ExecutionControllerTest.class
-com/mohitprasad/codeeditor/CodeEditorApplicationTests.class
-com/mohitprasad/codeeditor/service/CodeExecutionServiceTest.class
-com/mohitprasad/codeeditor/websocket/WebSocketIntegrationTest.class
