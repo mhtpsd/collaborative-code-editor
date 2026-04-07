@@ -3,31 +3,42 @@
 A production-grade real-time collaborative code editor built with Spring Boot, React, Monaco Editor, WebSockets (STOMP/SockJS), Redis Pub/Sub, and Apache Kafka. Multiple users can edit code simultaneously in shared rooms with live cursor tracking, chat, and sandboxed Docker code execution.
 
 [![CI](https://github.com/mhtpsd/collaborative-code-editor/actions/workflows/ci.yml/badge.svg)](https://github.com/mhtpsd/collaborative-code-editor/actions/workflows/ci.yml)
+![Java](https://img.shields.io/badge/Java-17-ED8B00?style=flat-square&logo=openjdk&logoColor=white)
+![Spring Boot](https://img.shields.io/badge/Spring_Boot-3.2-6DB33F?style=flat-square&logo=spring-boot&logoColor=white)
+![React](https://img.shields.io/badge/React-18-61DAFB?style=flat-square&logo=react&logoColor=black)
+![Kafka](https://img.shields.io/badge/Kafka-231F20?style=flat-square&logo=apachekafka&logoColor=white)
+![Redis](https://img.shields.io/badge/Redis-DC382D?style=flat-square&logo=redis&logoColor=white)
+![WebSocket](https://img.shields.io/badge/WebSocket-STOMP-010101?style=flat-square)
+![Docker](https://img.shields.io/badge/Docker-2496ED?style=flat-square&logo=docker&logoColor=white)
+![Kubernetes](https://img.shields.io/badge/Kubernetes-326CE5?style=flat-square&logo=kubernetes&logoColor=white)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 ---
 
 ## Architecture
 
-```
-┌─────────────────────────────────────────────────────────────┐
-│                        Frontend                             │
-│   React 18 + TypeScript + Monaco Editor + STOMP/SockJS     │
-└──────────────────┬──────────────────┬───────────────────────┘
-                   │ REST API          │ WebSocket (STOMP)
-┌──────────────────▼──────────────────▼───────────────────────┐
-│                Spring Boot 3.2 Backend                      │
-│  REST Controllers │ WebSocket Handler │ Kafka Producer/Consumer│
-└──────┬────────────┬───────────────────┬──────────────────────┘
-       │            │                   │
-  ┌────▼───┐  ┌─────▼────┐      ┌──────▼──────┐
-  │PostgreSQL│  │  Redis   │      │   Kafka     │
-  │   DB    │  │Pub/Sub + │      │ exec-queue  │
-  └─────────┘  │  Cache   │      └──────┬──────┘
-               └──────────┘             │
-                                 ┌──────▼──────┐
-                                 │  Docker     │
-                                 │  Sandbox    │
-                                 └─────────────┘
+### Real-Time Collaboration Flow
+
+```mermaid
+flowchart LR
+    subgraph Frontend
+        A([User A\nMonaco Editor]) -->|CodeChangeMessage\nSTOMP WebSocket| WS
+        UB([User B]) -.-|receives update| WS
+        UC([User C]) -.-|receives update| WS
+        WS([SockJS/STOMP\nClient])
+    end
+
+    subgraph Backend Cluster
+        WS -->|STOMP /app/editor/\n{roomCode}/code-change| SB1[Spring Boot\nInstance 1]
+        SB1 -->|broadcast /topic/room/\n{code}/code-change| WS
+        SB1 <-->|Pub/Sub\nhorizontal scaling| SB2[Spring Boot\nInstance 2]
+    end
+
+    subgraph Data Layer
+        SB1 -->|update cache| RC[(Redis\nCache + Pub/Sub)]
+        RC <-->|sync| SB2
+        SB1 -->|flush every 30s\nscheduled job| PG[(PostgreSQL)]
+    end
 ```
 
 **Real-Time Sync Flow:**
@@ -37,12 +48,51 @@ A production-grade real-time collaborative code editor built with Spring Boot, R
 4. Redis Pub/Sub forwards changes to other backend instances (horizontal scaling)
 5. Scheduled job flushes Redis content → PostgreSQL every 30 seconds
 
+---
+
+### Code Execution Flow
+
+```mermaid
+flowchart TD
+    subgraph API Layer
+        U([User clicks Run]) -->|POST /api/v1/execute| API[Spring Boot\nREST Controller]
+        API -->|save PENDING status| DB[(PostgreSQL)]
+        FE([Frontend]) -->|poll GET /api/v1/execute/{id}| API
+        API -->|return result| FE
+    end
+
+    subgraph Kafka Pipeline
+        API -->|publish| KT[Kafka Topic\nexecution-requests]
+        KT -->|consume| KC[ExecutionResult\nConsumer]
+        KC -->|save result| DB
+    end
+
+    subgraph Docker Sandbox
+        KC -->|spin up container\n--network none\n--memory=256m| DC[Docker Container]
+        DC -->|capture stdout/stderr| KC
+    end
+```
+
 **Code Execution Flow:**
 1. User clicks Run → `POST /api/v1/execute`
 2. Backend saves `PENDING` result → publishes to Kafka `execution-requests`
 3. `ExecutionResultConsumer` picks up message → spins up sandboxed Docker container
 4. Output/error captured → saved to PostgreSQL
 5. Frontend polls `GET /api/v1/execute/{id}` until completion
+
+---
+
+## Features
+
+- 👥 **Real-time collaboration** — multiple users edit simultaneously with live cursor tracking
+- 💬 **In-room chat** — integrated chat alongside the code editor
+- 🎨 **Monaco Editor** — VS Code's editor engine with syntax highlighting for 6 languages
+- 🔒 **Sandboxed execution** — code runs in Docker containers with `--network none`, 256MB memory limit, 10s timeout
+- 📡 **WebSocket (STOMP/SockJS)** — bidirectional real-time communication with auto-reconnect
+- 🔄 **Redis Pub/Sub** — enables horizontal scaling across multiple backend instances
+- ⚡ **Kafka execution queue** — decouples code submission from execution for reliability
+- ☸️ **Kubernetes-ready** — sticky sessions for WebSocket affinity, HPA autoscaling, Kustomize overlays
+- 🧪 **Testcontainers** — integration tests with real PostgreSQL, Redis, Kafka
 
 ---
 
