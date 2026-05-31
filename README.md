@@ -1,6 +1,6 @@
 # CodeCollab — Real-Time Collaborative Code Editor
 
-A production-grade real-time collaborative code editor built with Spring Boot, React, Monaco Editor, WebSockets (STOMP/SockJS), Redis Pub/Sub, and Apache Kafka. Multiple users can edit code simultaneously in shared rooms with live cursor tracking, chat, and sandboxed Docker code execution.
+A production-grade real-time collaborative code editor built with Spring Boot, React, Monaco Editor, WebSockets (STOMP/SockJS), Redis Pub/Sub, and Apache Kafka. Multiple users can edit code simultaneously with live cursor tracking, in-room chat, and sandboxed code execution.
 
 [![CI](https://github.com/mhtpsd/collaborative-code-editor/actions/workflows/ci.yml/badge.svg)](https://github.com/mhtpsd/collaborative-code-editor/actions/workflows/ci.yml)
 ![Java](https://img.shields.io/badge/Java-17-ED8B00?style=flat-square&logo=openjdk&logoColor=white)
@@ -22,22 +22,22 @@ A production-grade real-time collaborative code editor built with Spring Boot, R
 ```mermaid
 flowchart LR
     subgraph Frontend
-        A([User A\nMonaco Editor]) -->|CodeChangeMessage\nSTOMP WebSocket| WS
+        A([User A<br/>Monaco Editor]) -->|CodeChangeMessage<br/>STOMP WebSocket| WS
         UB([User B]) -.-|receives update| WS
         UC([User C]) -.-|receives update| WS
-        WS([SockJS/STOMP\nClient])
+        WS([SockJS/STOMP<br/>Client])
     end
 
     subgraph Backend Cluster
-        WS -->|STOMP /app/editor/\n{roomCode}/code-change| SB1[Spring Boot\nInstance 1]
-        SB1 -->|broadcast /topic/room/\n{code}/code-change| WS
-        SB1 <-->|Pub/Sub\nhorizontal scaling| SB2[Spring Boot\nInstance 2]
+        WS -->|STOMP /app/editor/<br/>{roomCode}/code-change| SB1[Spring Boot<br/>Instance 1]
+        SB1 -->|broadcast /topic/room/<br/>{code}/code-change| WS
+        SB1 <-->|Pub/Sub<br/>horizontal scaling| SB2[Spring Boot<br/>Instance 2]
     end
 
     subgraph Data Layer
-        SB1 -->|update cache| RC[(Redis\nCache + Pub/Sub)]
+        SB1 -->|update cache| RC[(Redis<br/>Cache + Pub/Sub)]
         RC <-->|sync| SB2
-        SB1 -->|flush every 30s\nscheduled job| PG[(PostgreSQL)]
+        SB1 -->|flush every 30s<br/>scheduled job| PG[(PostgreSQL)]
     end
 ```
 
@@ -55,20 +55,20 @@ flowchart LR
 ```mermaid
 flowchart TD
     subgraph API Layer
-        U([User clicks Run]) -->|POST /api/v1/execute| API[Spring Boot\nREST Controller]
+        U([User clicks Run]) -->|POST /api/v1/execute| API[Spring Boot<br/>REST Controller]
         API -->|save PENDING status| DB[(PostgreSQL)]
         FE([Frontend]) -->|poll GET /api/v1/execute/{id}| API
         API -->|return result| FE
     end
 
     subgraph Kafka Pipeline
-        API -->|publish| KT[Kafka Topic\nexecution-requests]
-        KT -->|consume| KC[ExecutionResult\nConsumer]
+        API -->|publish| KT[Kafka Topic<br/>execution-requests]
+        KT -->|consume| KC[ExecutionResult<br/>Consumer]
         KC -->|save result| DB
     end
 
     subgraph Docker Sandbox
-        KC -->|spin up container\n--network none\n--memory=256m| DC[Docker Container]
+        KC -->|spin up container<br/>--network none<br/>--memory=256m| DC[Docker Container]
         DC -->|capture stdout/stderr| KC
     end
 ```
