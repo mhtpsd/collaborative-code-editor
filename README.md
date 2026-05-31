@@ -22,22 +22,22 @@ A production-grade real-time collaborative code editor built with Spring Boot, R
 ```mermaid
 flowchart LR
     subgraph Frontend
-        A([User A<br/>Monaco Editor]) -->|CodeChangeMessage<br/>STOMP WebSocket| WS
+        A([User A<br/>Monaco Editor]) -->|CodeChangeMessage via STOMP WebSocket| WS
         UB([User B]) -.-|receives update| WS
         UC([User C]) -.-|receives update| WS
         WS([SockJS/STOMP<br/>Client])
     end
 
     subgraph Backend Cluster
-        WS -->|STOMP /app/editor/<br/>{roomCode}/code-change| SB1[Spring Boot<br/>Instance 1]
-        SB1 -->|broadcast /topic/room/<br/>{code}/code-change| WS
-        SB1 <-->|Pub/Sub<br/>horizontal scaling| SB2[Spring Boot<br/>Instance 2]
+        WS -->|STOMP /app/editor/roomCode/code-change| SB1[Spring Boot<br/>Instance 1]
+        SB1 -->|broadcast /topic/room/code/code-change| WS
+        SB1 <-->|Pub/Sub horizontal scaling| SB2[Spring Boot<br/>Instance 2]
     end
 
     subgraph Data Layer
         SB1 -->|update cache| RC[(Redis<br/>Cache + Pub/Sub)]
         RC <-->|sync| SB2
-        SB1 -->|flush every 30s<br/>scheduled job| PG[(PostgreSQL)]
+        SB1 -->|flush every 30s scheduled job| PG[(PostgreSQL)]
     end
 ```
 
@@ -57,7 +57,7 @@ flowchart TD
     subgraph API Layer
         U([User clicks Run]) -->|POST /api/v1/execute| API[Spring Boot<br/>REST Controller]
         API -->|save PENDING status| DB[(PostgreSQL)]
-        FE([Frontend]) -->|poll GET /api/v1/execute/{id}| API
+        FE([Frontend]) -->|poll GET /api/v1/execute/id| API
         API -->|return result| FE
     end
 
@@ -68,7 +68,7 @@ flowchart TD
     end
 
     subgraph Docker Sandbox
-        KC -->|spin up container<br/>--network none<br/>--memory=256m| DC[Docker Container]
+        KC -->|spin up container --network none --memory=256m| DC[Docker Container]
         DC -->|capture stdout/stderr| KC
     end
 ```
